@@ -1,0 +1,523 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define MAX_ITEMS 50
+#define MENU_FILE "menu.txt"
+#define ORDERS_FILE "orders.txt"
+#define PAYMENTS_FILE "payments.txt"
+
+// Structure for menu items
+struct MenuItem {
+    int id;
+    char name[30];
+    float price;
+    int stock;
+};
+
+// Structure for orders
+struct Order {
+    int orderId;
+    int itemId;
+    int quantity;
+};
+
+// Structure for payment details
+struct Payment {
+    int orderId;
+    float amountPaid;
+    float change;
+};
+
+// Function prototypes
+void loadMenu();
+void saveMenu();
+void displayMenu();
+void addMenuItem();
+void updateMenuItem();
+void restockItem();
+void processOrder();
+void processPayment();
+void loadOrders();
+void saveOrders();
+void loadPayments();
+void savePayments();
+
+// Global variables
+struct MenuItem menu[MAX_ITEMS];
+int menuSize = 0;
+struct Order orders[MAX_ITEMS];
+int orderCount = 0;
+struct Payment payments[MAX_ITEMS];
+int paymentCount = 0;
+
+int main() {
+    loadMenu();
+    loadOrders();
+    loadPayments();
+
+    int choice;
+
+    while (1) {
+        printf("\n--- Canteen POS System ---\n");
+        printf("1. Display Menu\n");
+        printf("2. Add Menu Item\n");
+        printf("3. Update Menu Item\n");
+        printf("4. Restock Item\n");
+        printf("5. Process Order\n");
+        printf("6. Process Payment\n");
+        printf("7. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                displayMenu();
+                break;
+            case 2:
+                addMenuItem();
+                break;
+            case 3:
+                updateMenuItem();
+                break;
+            case 4:
+                restockItem();
+                break;
+            case 5:
+                processOrder();
+                break;
+            case 6:
+                processPayment();
+                break;
+            case 7:
+                saveMenu();
+                saveOrders();
+                savePayments();
+                printf("Exiting the system. Goodbye!\n");
+                return 0;
+            default:
+                printf("Invalid choice! Try again.\n");
+        }
+    }
+
+    return 0;
+}
+
+// Function to load menu from file
+void loadMenu() {
+    FILE *file = fopen(MENU_FILE, "r");
+    if (file == NULL) {
+        printf("Error: Menu file not found! Starting with empty menu.\n");
+        return;
+    }
+
+    while (fscanf(file, "%d %s %f %d", &menu[menuSize].id, menu[menuSize].name, &menu[menuSize].price, &menu[menuSize].stock) != EOF) {
+        menuSize++;
+    }
+
+    fclose(file);
+}
+
+// Function to save menu to file
+void saveMenu() {
+    FILE *file = fopen(MENU_FILE, "w");
+    if (file == NULL) {
+        printf("Error: Unable to save menu.\n");
+        return;
+    }
+
+    for (int i = 0; i < menuSize; i++) {
+        fprintf(file, "%d %s %.2f %d\n", menu[i].id, menu[i].name, menu[i].price, menu[i].stock);
+    }
+
+    fclose(file);
+}
+
+// Function to display the menu
+void displayMenu() {
+    if (menuSize == 0) {
+        printf("The menu is currently empty.\n");
+        return;
+    }
+
+    printf("\nID\tName\t\tPrice\tStock\n");
+    for (int i = 0; i < menuSize; i++) {
+        printf("%d\t%s\t%.2f\t%d\n", menu[i].id, menu[i].name, menu[i].price, menu[i].stock);
+    }
+}
+
+// Function to add a new menu item
+void addMenuItem() {
+    if (menuSize >= MAX_ITEMS) {
+        printf("Menu is full! Cannot add more items.\n");
+        return;
+    }
+
+    struct MenuItem newItem;
+    newItem.id = menuSize + 1;
+
+    printf("Enter item name: ");
+    scanf(" %[^\n]%*c", newItem.name);
+    printf("Enter item price: ");
+    scanf("%f", &newItem.price);
+    printf("Enter item stock: ");
+    scanf("%d", &newItem.stock);
+
+    menu[menuSize] = newItem;
+    menuSize++;
+
+    printf("Item added successfully!\n");
+}
+
+// Function to update an existing menu item
+void updateMenuItem() {
+    int id, choice;
+
+    if (menuSize == 0) {
+        printf("The menu is empty.\n");
+        return;
+    }
+
+    printf("Enter the ID of the item to update: ");
+    scanf("%d", &id);
+
+    if (id <= 0 || id > menuSize) {
+        printf("Invalid item ID.\n");
+        return;
+    }
+
+    printf("What would you like to update?\n");
+    printf("1. Name\n2. Price\n3. Stock\n");
+    scanf("%d", &choice);
+
+    switch (choice) {
+        case 1:
+            printf("Enter new name: ");
+            scanf(" %[^\n]%*c", menu[id - 1].name);
+            break;
+        case 2:
+            printf("Enter new price: ");
+            scanf("%f", &menu[id - 1].price);
+            break;
+        case 3:
+            printf("Enter new stock: ");
+            scanf("%d", &menu[id - 1].stock);
+            break;
+        default:
+            printf("Invalid choice!\n");
+            return;
+    }
+
+    printf("Item updated successfully!\n");
+}
+
+// Function to restock an item
+void restockItem() {
+    int id, restockQuantity;
+
+    if (menuSize == 0) {
+        printf("The menu is empty.\n");
+        return;
+    }
+
+    printf("Enter the ID of the item to restock: ");
+    scanf("%d", &id);
+
+    if (id <= 0 || id > menuSize) {
+        printf("Invalid item ID.\n");
+        return;
+    }
+
+    printf("Enter the quantity to restock: ");
+    scanf("%d", &restockQuantity);
+
+    menu[id - 1].stock += restockQuantity;
+
+    printf("Item restocked successfully! New stock: %d\n", menu[id - 1].stock);
+}
+
+// Function to process an order
+void processOrder() {
+    if (menuSize == 0) {
+        printf("The menu is empty. Add some items first.\n");
+        return;
+    }
+
+    struct Order newOrder;
+    printf("Enter order ID: ");
+    scanf("%d", &newOrder.orderId);
+    printf("Enter item ID: ");
+    scanf("%d", &newOrder.itemId);
+    printf("Enter quantity: ");
+    scanf("%d", &newOrder.quantity);
+
+    if (newOrder.itemId <= 0 || newOrder.itemId > menuSize) {
+        printf("Invalid item ID.\n");
+        return;
+    }
+
+    if (newOrder.quantity > menu[newOrder.itemId - 1].stock) {
+        printf("Not enough stock available.\n");
+        return;
+    }
+
+    menu[newOrder.itemId - 1].stock -= newOrder.quantity;
+    orders[orderCount++] = newOrder;
+
+    printf("Order processed successfully! Order ID: %d\n", newOrder.orderId);
+}
+
+// Function to process payment
+void processPayment() {
+    int orderId;
+    float amountPaid;
+
+    if (orderCount == 0) {
+        printf("No orders placed yet.\n");
+        return;
+    }
+
+    printf("Enter order ID for payment: ");
+    scanf("%d", &orderId);
+
+    printf("Enter amount paid: ");
+    scanf("%f", &amountPaid);
+
+    // Find the order with the given ID
+    int found = 0;
+    for (int i = 0; i < orderCount; i++) {
+        if (orders[i].orderId == orderId) {
+            float totalAmount = menu[orders[i].itemId - 1].price * orders[i].quantity;
+            float change = amountPaid - totalAmount;
+            struct Payment newPayment = { orderId, amountPaid, change };
+            payments[paymentCount++] = newPayment;
+            printf("Payment processed. Change: ₹%.2f\n", change);
+            found = 1;
+            break;
+        }
+    }
+
+    if (!found) {
+        printf("Order ID not found.\n");
+    }
+}
+
+// Function to load orders from file
+void loadOrders() {
+    FILE *file = fopen(ORDERS_FILE, "r");
+    if (file == NULL) {
+        return;
+    }
+
+    while (fscanf(file, "%d %d %d", &orders[orderCount].orderId, &orders[orderCount].itemId, &orders[orderCount].quantity) != EOF) {
+        orderCount++;
+    }
+
+    fclose(file);
+}
+
+// Function to save orders to file
+void saveOrders() {
+    FILE *file = fopen(ORDERS_FILE, "w");
+    if (file == NULL) {
+        printf("Error: Unable to save orders.\n");
+        return;
+    }
+
+    for (int i = 0; i < orderCount; i++) {
+        fprintf(file, "%d %d %d\n", orders[i].orderId, orders[i].itemId, orders[i].quantity);
+    }
+
+    fclose(file);
+}
+
+// Function to load payments from file
+void loadPayments() {
+    FILE *file = fopen(PAYMENTS_FILE, "r");
+    if (file == NULL) {
+        return;
+    }
+
+    while (fscanf(file, "%d %f %f", &payments[paymentCount].orderId, &payments[paymentCount].amountPaid, &payments[paymentCount].change) != EOF) {
+        paymentCount++;
+    }
+
+    fclose(file);
+}
+
+// Function to save payments to file
+void savePayments() {
+    FILE *file = fopen(PAYMENTS_FILE, "w");
+    if (file == NULL) {
+        printf("Error: Unable to save payments.\n");
+        return;
+    }
+
+    for (int i = 0; i < paymentCount; i++) {
+        fprintf(file, "%d %.2f %.2f\n", payments[i].orderId, payments[i].amountPaid, payments[i].change);
+    }
+
+    fclose(file);
+}
+// Function to generate sales report
+void generateSalesReport() {
+    if (orderCount == 0) {
+        printf("No orders to report.\n");
+        return;
+    }
+
+    float totalSales = 0.0;
+    int mostPopularItem = -1, maxOrders = 0;
+    int itemOrderCount[MAX_ITEMS] = {0};
+
+    for (int i = 0; i < orderCount; i++) {
+        float itemTotal = menu[orders[i].itemId - 1].price * orders[i].quantity;
+        totalSales += itemTotal;
+        itemOrderCount[orders[i].itemId - 1] += orders[i].quantity;
+    }
+
+    // Find the most popular item
+    for (int i = 0; i < MAX_ITEMS; i++) {
+        if (itemOrderCount[i] > maxOrders) {
+            maxOrders = itemOrderCount[i];
+            mostPopularItem = i;
+        }
+    }
+
+    printf("\n--- Sales Report ---\n");
+    printf("Total Sales: ₹%.2f\n", totalSales);
+    if (mostPopularItem != -1) {
+        printf("Most Popular Item: %s (Ordered %d times)\n", menu[mostPopularItem].name, maxOrders);
+    } else {
+        printf("No items sold yet.\n");
+    }
+}
+// Function to assign tray color based on item category
+void assignTrayColor(int itemId) {
+    if (itemId <= 0 || itemId > menuSize) {
+        printf("Invalid item ID.\n");
+        return;
+    }
+
+    // Example categories with different tray colors
+    if (strcmp(menu[itemId - 1].name, "Rice") == 0 || strcmp(menu[itemId - 1].name, "Fried Rice") == 0) {
+        printf("Tray Color: Red\n");
+    } else if (strcmp(menu[itemId - 1].name, "Coffee") == 0 || strcmp(menu[itemId - 1].name, "Tea") == 0) {
+        printf("Tray Color: Blue\n");
+    } else {
+        printf("Tray Color: White\n");  // Default tray color
+    }
+}
+// Function to estimate preparation time for orders
+void estimatePreparationTime(int itemId, int quantity) {
+    if (itemId <= 0 || itemId > menuSize) {
+        printf("Invalid item ID.\n");
+        return;
+    }
+
+    int prepTime = 0;
+    if (strcmp(menu[itemId - 1].name, "Rice") == 0) {
+        prepTime = 10 * quantity;  // Rice takes 10 minutes per item
+    } else if (strcmp(menu[itemId - 1].name, "Coffee") == 0) {
+        prepTime = 5 * quantity;  // Coffee takes 5 minutes per cup
+    } else {
+        prepTime = 8 * quantity;  // Default preparation time
+    }
+
+    printf("Estimated preparation time: %d minutes\n", prepTime);
+}
+// Simple user authentication for Cashier/Manager
+void userLogin() {
+    char username[20], password[20];
+    printf("Enter username: ");
+    scanf(" %s", username);
+    printf("Enter password: ");
+    scanf(" %s", password);
+
+    // Simple check for roles (Cashier/Manager)
+    if (strcmp(username, "manager") == 0 && strcmp(password, "admin123") == 0) {
+        printf("Manager login successful!\n");
+        // Proceed to manager menu
+    } else if (strcmp(username, "cashier") == 0 && strcmp(password, "cash123") == 0) {
+        printf("Cashier login successful!\n");
+        // Proceed to cashier menu
+    } else {
+        printf("Invalid credentials!\n");
+    }
+}int main() {
+    loadMenu();
+    loadOrders();
+    loadPayments();
+
+    int choice;
+
+    while (1) {
+        printf("\n--- Canteen POS System ---\n");
+        printf("1. Display Menu\n");
+        printf("2. Add Menu Item\n");
+        printf("3. Update Menu Item\n");
+        printf("4. Restock Item\n");
+        printf("5. Process Order\n");
+        printf("6. Process Payment\n");
+        printf("7. Generate Sales Report\n");
+        printf("8. Add Expiry Date to Item\n");
+        printf("9. Assign Tray Color\n");
+        printf("10. Estimate Preparation Time\n");
+        printf("11. User Login\n");
+        printf("12. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                displayMenu();
+                break;
+            case 2:
+                addMenuItem();
+                break;
+            case 3:
+                updateMenuItem();
+                break;
+            case 4:
+                restockItem();
+                break;
+            case 5:
+                processOrder();
+                break;
+            case 6:
+                processPayment();
+                break;
+            case 7:
+                generateSalesReport();
+                break;
+            case 8:
+                addExpiryDate();
+                break;
+            case 9:
+                printf("Enter item ID for tray color: ");
+                int id;
+                scanf("%d", &id);
+                assignTrayColor(id);
+                break;
+            case 10:
+                printf("Enter item ID and quantity for time estimate: ");
+                scanf("%d %d", &id, &quantity);
+                estimatePreparationTime(id, quantity);
+                break;
+            case 11:
+                userLogin();
+                break;
+            case 12:
+                saveMenu();
+                saveOrders();
+                savePayments();
+                printf("Exiting the system. Goodbye!\n");
+                return 0;
+            default:
+                printf("Invalid choice! Try again.\n");
+        }
+    }
+
+    return 0;
+}
+
