@@ -1,0 +1,194 @@
+#include <stdio.h>
+#include <string.h>
+
+// Structure for menu items
+struct MenuItem {
+    int id;
+    char name[30];
+    float price;
+    int stock;
+};
+
+// Global menu array and size
+struct MenuItem menu[50];
+int menuSize = 0;
+
+// Function prototypes
+void mainMenu();
+void displayMenu();
+void addMenuItem();
+void updateMenuItem();
+void processOrder();
+
+int main() {
+    printf("Welcome to the Canteen POS System!\n");
+
+    // Call the main menu
+    mainMenu();
+
+    return 0;
+}
+
+// Main Menu Function
+void mainMenu() {
+    int choice;
+
+    while (1) {
+        printf("\n--- Main Menu ---\n");
+        printf("1. Display Menu\n");
+        printf("2. Add Menu Item\n");
+        printf("3. Update Menu Item\n");
+        printf("4. Process Order\n");
+        printf("5. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                displayMenu();
+                break;
+            case 2:
+                addMenuItem();
+                break;
+            case 3:
+                updateMenuItem();
+                break;
+            case 4:
+                processOrder();
+                break;
+            case 5:
+                printf("Exiting the system. Goodbye!\n");
+                return;
+            default:
+                printf("Invalid choice! Try again.\n");
+        }
+    }
+}
+
+// Function to display the menu
+void displayMenu() {
+    if (menuSize == 0) {
+        printf("\nThe menu is currently empty.\n");
+        return;
+    }
+
+    printf("\nID\tName\t\tPrice\tStock\n");
+    printf("------------------------------------\n");
+    for (int i = 0; i < menuSize; i++) {
+        printf("%d\t%s\t\t%.2f\t%d\n", menu[i].id, menu[i].name, menu[i].price, menu[i].stock);
+    }
+}
+
+// Function to add a new menu item
+void addMenuItem() {
+    if (menuSize >= 50) {
+        printf("\nMenu is full! Cannot add more items.\n");
+        return;
+    }
+
+    struct MenuItem newItem;
+    newItem.id = menuSize + 1;
+
+    printf("\nEnter item name: ");
+    scanf(" %[^\n]%*c", newItem.name);
+    printf("Enter item price: ");
+    scanf("%f", &newItem.price);
+    printf("Enter item stock: ");
+    scanf("%d", &newItem.stock);
+
+    menu[menuSize] = newItem;
+    menuSize++;
+
+    printf("\nItem added successfully!\n");
+}
+
+// Function to update an existing menu item
+void updateMenuItem() {
+    int id, choice, newStock;
+    float newPrice;
+    char newName[30];
+
+    if (menuSize == 0) {
+        printf("\nThe menu is currently empty.\n");
+        return;
+    }
+
+    printf("\nEnter the ID of the item to update: ");
+    scanf("%d", &id);
+
+    if (id <= 0 || id > menuSize) {
+        printf("\nInvalid item ID.\n");
+        return;
+    }
+
+    printf("\nWhat would you like to update?\n");
+    printf("1. Name\n2. Price\n3. Stock\nEnter your choice: ");
+    scanf("%d", &choice);
+
+    switch (choice) {
+        case 1:
+            printf("Enter new name: ");
+            scanf(" %[^\n]%*c", newName);
+            strcpy(menu[id - 1].name, newName);
+            printf("\nItem name updated successfully!\n");
+            break;
+        case 2:
+            printf("Enter new price: ");
+            scanf("%f", &newPrice);
+            menu[id - 1].price = newPrice;
+            printf("\nItem price updated successfully!\n");
+            break;
+        case 3:
+            printf("Enter new stock: ");
+            scanf("%d", &newStock);
+            menu[id - 1].stock = newStock;
+            printf("\nItem stock updated successfully!\n");
+            break;
+        default:
+            printf("\nInvalid choice!\n");
+    }
+}
+
+// Function to process orders
+void processOrder() {
+    if (menuSize == 0) {
+        printf("\nThe menu is currently empty. Cannot process orders.\n");
+        return;
+    }
+
+    int itemId, quantity;
+    float totalCost = 0.0;
+    char continueOrder;
+
+    printf("\n--- Place Your Order ---\n");
+    displayMenu();
+
+    do {
+        printf("\nEnter the ID of the item you want to order: ");
+        scanf("%d", &itemId);
+
+        if (itemId <= 0 || itemId > menuSize) {
+            printf("\nInvalid item ID. Please try again.\n");
+            continue;
+        }
+
+        printf("Enter the quantity: ");
+        scanf("%d", &quantity);
+
+        if (quantity > menu[itemId - 1].stock) {
+            printf("\nInsufficient stock! Available stock: %d\n", menu[itemId - 1].stock);
+        } else {
+            menu[itemId - 1].stock -= quantity;
+            totalCost += menu[itemId - 1].price * quantity;
+            printf("\nAdded %d x %s to your order.\n", quantity, menu[itemId - 1].name);
+        }
+
+        printf("\nDo you want to order another item? (y/n): ");
+        scanf(" %c", &continueOrder);
+
+    } while (continueOrder == 'y' || continueOrder == 'Y');
+
+    printf("\n--- Order Summary ---\n");
+    printf("Total Cost: %.2f\n", totalCost);
+    printf("Thank you for your order!\n");
+}
