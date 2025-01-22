@@ -1,0 +1,2 @@
+# CANTEEN_POS_SYSTEM001
+Canteen POS System: Mini Project in C language by 1. HRISHIT RAI 2. MANISH GUPTA 3. SAMRIDH RAJ
