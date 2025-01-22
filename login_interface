@@ -1,0 +1,78 @@
+#include <stdio.h>
+#include <string.h>
+
+// Function prototypes
+int login();
+void showMenu();
+
+int main() {
+    printf("Welcome to the Canteen POS System!\n");
+
+    // Call the login function
+    if (login()) {
+        printf("\nLogin successful!\n");
+        showMenu(); // Proceed to main menu
+    } else {
+        printf("\nLogin failed! Exiting system.\n");
+    }
+
+    return 0;
+}
+
+// Login Function
+int login() {
+    // Hardcoded usernames and passwords
+    char usernames[][10] = {"admin", "staff"};
+    char passwords[][10] = {"admin123", "staff123"};
+
+    char inputUsername[10], inputPassword[10];
+    int attempts = 3;
+
+    while (attempts > 0) {
+        printf("\nEnter username: ");
+        scanf("%s", inputUsername);
+        printf("Enter password: ");
+        scanf("%s", inputPassword);
+
+        // Check credentials
+        for (int i = 0; i < 2; i++) {
+            if (strcmp(inputUsername, usernames[i]) == 0 &&
+                strcmp(inputPassword, passwords[i]) == 0) {
+                return 1; // Login successful
+            }
+        }
+
+        attempts--;
+        printf("Invalid credentials! You have %d attempts left.\n", attempts);
+    }
+
+    return 0; // Login failed
+}
+
+// Main Menu Function
+void showMenu() {
+    int choice;
+
+    while (1) {
+        printf("\n--- Main Menu ---\n");
+        printf("1. Process Orders\n");
+        printf("2. Manage Menu\n");
+        printf("3. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Processing orders...\n");
+                break;
+            case 2:
+                printf("Managing menu...\n");
+                break;
+            case 3:
+                printf("Exiting the system. Goodbye!\n");
+                return;
+            default:
+                printf("Invalid choice! Try again.\n");
+        }
+    }
+}
