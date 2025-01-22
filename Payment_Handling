@@ -1,0 +1,46 @@
+#include <stdio.h>
+
+// Function prototypes
+void processPayment();
+
+int main() {
+    printf("Welcome to the Canteen POS System!\n");
+
+    // Call the payment handling function
+    processPayment();
+
+    return 0;
+}
+
+// Function to process payment
+void processPayment() {
+    int itemCount;
+    float itemPrice, total = 0, paidAmount, change;
+
+    printf("\n--- Payment Processing ---\n");
+
+    // Get the number of items being purchased
+    printf("Enter the number of items purchased: ");
+    scanf("%d", &itemCount);
+
+    // Input price of each item and calculate the total
+    for (int i = 0; i < itemCount; i++) {
+        printf("Enter the price of item %d: ", i + 1);
+        scanf("%f", &itemPrice);
+        total += itemPrice;
+    }
+
+    printf("\nTotal amount to be paid: ₹%.2f\n", total);
+
+    // Input payment amount
+    printf("Enter the amount paid: ₹");
+    scanf("%f", &paidAmount);
+
+    // Validate payment and calculate change
+    if (paidAmount < total) {
+        printf("Insufficient payment! Please pay at least ₹%.2f.\n", total);
+    } else {
+        change = paidAmount - total;
+        printf("Payment successful! Change to return: ₹%.2f\n", change);
+    }
+}
